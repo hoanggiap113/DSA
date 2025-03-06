@@ -1,21 +1,23 @@
 import java.util.*;
+import java.util.Collections;
 
 public class Graph {
     private static ArrayList<List<Integer>> ke = new ArrayList<>(1000);
     private static boolean[] visited = new boolean[1000];
+    private static int[] parent = new int[1000];
 
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         int n = sc.nextInt();
         int m = sc.nextInt();
         int s = sc.nextInt();
+        int t = sc.nextInt();
         for (int i = 0; i <= n; i++) {
             ke.add(new ArrayList<>());
         }
         for (int i = 0; i < m; i++) {
             int x = sc.nextInt();
             int y = sc.nextInt();
-            ke.get(y).add(x);
             ke.get(x).add(y);
 
         }
@@ -23,11 +25,19 @@ public class Graph {
         Arrays.fill(visited, false);
 
         sc.close();
-        // dfs(s);
         dfs(s);
-        for (int i = 0; i <= n; i++) {
-            if (visited[i] == false) {
-                System.out.println("No");
+        if (!visited[t]) {
+            System.out.println("No path");
+        } else {
+            List<Integer> path = new ArrayList<>();
+            while (t != s) {
+                path.add(t);
+                t = parent[t];
+            }
+            path.add(s);
+            Collections.reverse(path);
+            for (int x : path) {
+                System.out.print(x + " ");
             }
         }
 
@@ -38,6 +48,7 @@ public class Graph {
         visited[u] = true;
         for (int v : ke.get(u)) {
             if (!visited[v]) {
+                parent[v] = u;
                 dfs(v);
             }
         }

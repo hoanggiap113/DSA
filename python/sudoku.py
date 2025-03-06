@@ -177,13 +177,13 @@ def draw_message(message):
 # Main function
 if __name__ == "__main__":
     board = generate_random_board()
-    message = ""  # Thêm biến message
+    message = ""
     running = True
     while running:
         screen.fill(WHITE)
         draw_board(board)
         draw_buttons()
-        draw_message(message)  # Hiển thị thông báo
+        draw_message(message)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
