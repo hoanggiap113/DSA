@@ -49,17 +49,25 @@ def visualize(order, title, g, pos):
 
 g = nx.Graph()
 g.add_edges_from([('A', 'B'), ('A', 'C'), ('B', 'D'), ('B', 'E'), ('C', 'F'), ('C', 'G')])
-
+# g.add_edges_from([(1,3),(1,5),(1,6),(2,5),(3,4),(3,5),(5,6)])
 adj = {node: list(g.neighbors(node)) for node in g.nodes}
-pos = nx.spring_layout(g)
+pos = {
+    'A': (0, 2),
+    'B': (-1, 1),
+    'C': (1, 1),
+    'D': (-2, 0),
+    'E': (0, 0),
+    'F': (1, 0),
+    'G': (2, 0)
+}
 
-# #visualize cho bfs
-# visited_bfs = {node: False for node in g.nodes}
-# order_bfs = bfs('A', adj, visited_bfs)
-# visualize(order_bfs, "DFS visualization", g, pos)
+#visualize cho bfs
+visited_bfs = {node: False for node in g.nodes}
+order_bfs = bfs('A', adj, visited_bfs)
+visualize(order_bfs, "BFS visualization", g, pos)
 
-#Visualize cho dfs
-visited_dfs = {node: False for node in g.nodes}
-order_dfs = []
-dfs('A',g, visited_dfs, order_dfs)
-visualize(order_dfs, "DFS visualization", g, pos)
+# #Visualize cho dfs
+# visited_dfs = {node: False for node in g.nodes}
+# order_dfs = []
+# dfs('A',g, visited_dfs, order_dfs)
+# visualize(order_dfs, "DFS visualization", g, pos)
