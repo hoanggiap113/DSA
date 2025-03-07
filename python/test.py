@@ -1,69 +1,42 @@
-import networkx as nx
-import pygame
-import sys
+import heapq
 
-# Khởi tạo pygame
-pygame.init()
 
-# Cài đặt kích thước màn hình
-width, height = 800, 600
-screen = pygame.display.set_mode((width, height))
+def dijkstra(s, n, adj):
+    # Khởi tạo khoảng cách với giá trị vô cùng
+    INF = float('inf')
+    d = [INF] * (n + 1)
+    d[s] = 0
 
-# Tạo đồ thị
-G = nx.Graph()
+    # Hàng đợi ưu tiên (khoảng cách, đỉnh)
+    Q = []
+    heapq.heappush(Q, (0, s))
 
-# Thêm các nút và cạnh
-edges = [
-    (0.5, 4), (0.1, 3), (0.2, 4), (0.3, 5), (0.6, 4),
-    (0.7, 4), (0.8, 4), (0.9, 4), (0.10, 4), (0.11, 4),
-    (0.12, 4), (0.13, 4), (0.14, 4), (0.15, 4), (0.16, 4),
-    (0.17, 4), (0.18, 4), (0.19, 4), (0.20, 4), (0.21, 4),
-    (0.22, 4), (0.23, 4), (0.24, 4)
-]
+    while Q:
+        # Chọn đỉnh có khoảng cách từ s nhỏ nhất
+        kc, u = heapq.heappop(Q)
 
-G.add_edges_from(edges)
+        # Nếu khoảng cách hiện tại lớn hơn khoảng cách đã lưu, bỏ qua
+        if kc > d[u]:
+            continue
 
-# Vị trí các nút
-pos = nx.spring_layout(G)
+        # Relaxation: Cập nhật khoảng cách từ s tới các đỉnh kề với u
+        for v, w in adj[u]:
+            if d[v] > d[u] + w:
+                d[v] = d[u] + w
+                heapq.heappush(Q, (d[v], v))
 
-# Màu sắc
-background_color = (255, 255, 255)
-node_color = (0, 0, 255)
-edge_color = (0, 0, 0)
-visited_color = (255, 0, 0)
+    return d
 
-# Vẽ đồ thị
-def draw_graph():
-    screen.fill(background_color)
-    for edge in G.edges():
-        pygame.draw.line(screen, edge_color, pos[edge[0]], pos[edge[1]], 2)
-    for node in G.nodes():
-        pygame.draw.circle(screen, node_color, (int(pos[node][0]), int(pos[node][1])), 10)
-    pygame.display.flip()
 
-# Thực hiện BFS
-def bfs(start_node):
-    visited = set()
-    queue = [start_node]
-    while queue:
-        node = queue.pop(0)
-        if node not in visited:
-            visited.add(node)
-            pygame.draw.circle(screen, visited_color, (int(pos[node][0]), int(pos[node][1])), 10)
-            pygame.display.flip()
-            pygame.time.wait(500)  # Đợi 0.5 giây
-            queue.extend([n for n in G.neighbors(node) if n not in visited])
+# Ví dụ sử dụng
+n = 4  # Số đỉnh
+adj = {
+    1: [(2, 1), (4, 4)],
+    2: [(1, 1), (3, 2), (4, 3)],
+    3: [(2, 2)],
+    4: [(1, 4), (2, 3)]
+}
 
-# Vòng lặp chính
-draw_graph()
-bfs(0.5)
-
-# Chờ đóng cửa sổ
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-
-pygame.quit()
-sys.exit()
+s = 1  # Đỉnh nguồn
+distances = dijkstra(s, n, adj)
+print("Khoảng cách từ đỉnh", s, "đến các đỉnh khác:", distances[1:])

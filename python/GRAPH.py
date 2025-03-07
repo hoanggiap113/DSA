@@ -1,5 +1,4 @@
-import queue
-from collections import deque
+import heapq
 import networkx as nx
 import matplotlib.pyplot as plt
 import time
@@ -12,62 +11,90 @@ import time
 #     x, y = map(int, input().split())
 #     adj[x].append(y)
 #     adj[y].append(x)
-def dfs(u, ke, visited,order):
-    print(u, end=" ")
-    visited[u] = True
-    order.append(u)
-    for v in ke[u]:
-        if not visited[v]:
-            dfs(v, ke, visited,order)
+# def dfs(u, ke, visited,order):
+#     print(u, end=" ")
+#     visited[u] = True
+#     order.append(u)
+#     for v in ke[u]:
+#         if not visited[v]:
+#             dfs(v, ke, visited,order)
 
-def bfs(u, adj, visited):
-    q = deque()
-    q.append(u)
-    visited[u] = True
-    order = []
-    while q:
-        v = q.popleft()
-        order.append(v)
-        print(v,end = " ")
-        for x in adj[v]:
-            if not visited[x]:
-                q.append(x)
-                visited[x] = True
-    return order
+# def bfs(u, adj, visited):
+#     q = deque()
+#     q.append(u)
+#     visited[u] = True
+#     order = []
+#     while q:
+#         v = q.popleft()
+#         order.append(v)
+#         print(v,end = " ")
+#         for x in adj[v]:
+#             if not visited[x]:
+#                 q.append(x)
+#                 visited[x] = True
+#     return order
 
-def visualize(order, title, g, pos):
+def dijkstra(s, n, adj):
+    INF = float('inf')
+    d = [INF] * (n + 1)
+    d[s] = 0
+    Q = []
+    heapq.heappush(Q, (0, s))
+    while Q:
+        kc, u = heapq.heappop(Q)
+        if kc > d[u]:
+            continue
+        for v, w in adj[u].items():
+            if d[v] > d[u] + w:
+                d[v] = d[u] + w
+                heapq.heappush(Q, (d[v], v))
+    return d
+
+def visualize(s, t, g, pos):
+    adj = {node: {neighbor: g[node][neighbor]['weight'] for neighbor in g.neighbors(node)} for node in g.nodes}
+    n = len(g.nodes)
+    d = dijkstra(s, n, adj)
+    path = []
+    curr = t
+    while curr != s:
+        path.append(curr)
+        for neighbor in g.neighbors(curr):
+            if d[neighbor] + g[curr][neighbor]['weight'] == d[curr]:
+                curr = neighbor
+                break
+    path.append(s)
+    path.reverse()
+
     plt.figure()
-    plt.title(title)
-    for i, node in enumerate(order):
+    plt.title(f"Shortest Path from {s} to {t}")
+    for i, node in enumerate(path):
         plt.clf()
-        plt.title(title)
+        plt.title(f"Shortest Path from {s} to {t}")
+
         nx.draw(g, pos, labels={n: n for n in g.nodes}, node_color=['r' if n == node else 'g' for n in g.nodes])
+        edge_labels = nx.get_edge_attributes(g, 'weight')
+
+        nx.draw_networkx_edge_labels(g, pos, edge_labels=edge_labels)
         plt.draw()
         plt.pause(0.5)
     plt.show()
     time.sleep(0.5)
 
+
 g = nx.Graph()
-g.add_edges_from([('A', 'B'), ('A', 'C'), ('B', 'D'), ('B', 'E'), ('C', 'F'), ('C', 'G')])
-# g.add_edges_from([(1,3),(1,5),(1,6),(2,5),(3,4),(3,5),(5,6)])
-adj = {node: list(g.neighbors(node)) for node in g.nodes}
+g.add_edges_from([(1, 2, {'weight': 3}), (1, 3, {'weight': 4}), (2, 4, {'weight': 2}),
+                  (2, 5, {'weight': 3}), (3, 6, {'weight': 7}), (3, 7, {'weight': 6}),
+                  (3, 5, {'weight': 1})])
+
 pos = {
-    'A': (0, 2),
-    'B': (-1, 1),
-    'C': (1, 1),
-    'D': (-2, 0),
-    'E': (0, 0),
-    'F': (1, 0),
-    'G': (2, 0)
+    2: (0, 2),
+    1: (-1, 1),
+    4: (2, 2),
+    5: (1, 1),
+    3: (0, 0),
+    6: (3, 0),
+    7: (4, 2)
 }
 
-#visualize cho bfs
-visited_bfs = {node: False for node in g.nodes}
-order_bfs = bfs('A', adj, visited_bfs)
-visualize(order_bfs, "BFS visualization", g, pos)
+visualize(1, 5, g, pos)
 
-# #Visualize cho dfs
-# visited_dfs = {node: False for node in g.nodes}
-# order_dfs = []
-# dfs('A',g, visited_dfs, order_dfs)
-# visualize(order_dfs, "DFS visualization", g, pos)
