@@ -1,42 +1,47 @@
-import heapq
+import networkx as nx
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from collections import deque
+
+# Tạo đồ thị
+G = nx.Graph()
+edges = [
+    ('S', 'A', 1), ('S', 'B', 2),
+    ('A', 'C', 3), ('A', 'D', 4),
+    ('B', 'D', 5), ('B', 'E', 6),
+    ('C', 'F', 7), ('D', 'F', 8),
+    ('E', 'G', 9), ('F', 'G', 10)
+]
+G.add_weighted_edges_from(edges)
+
+# Khởi tạo BFS
+start = 'S'
+goal = 'G'
+queue = deque([(start, [start])])
+visited = set()
 
 
-def dijkstra(s, n, adj):
-    # Khởi tạo khoảng cách với giá trị vô cùng
-    INF = float('inf')
-    d = [INF] * (n + 1)
-    d[s] = 0
+# Hàm cập nhật animation
+def update(frame):
+    plt.clf()
+    pos = nx.spring_layout(G)
+    nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=2000, font_size=15, font_weight='bold')
+    labels = nx.get_edge_attributes(G, 'weight')
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=labels)
 
-    # Hàng đợi ưu tiên (khoảng cách, đỉnh)
-    Q = []
-    heapq.heappush(Q, (0, s))
-
-    while Q:
-        # Chọn đỉnh có khoảng cách từ s nhỏ nhất
-        kc, u = heapq.heappop(Q)
-
-        # Nếu khoảng cách hiện tại lớn hơn khoảng cách đã lưu, bỏ qua
-        if kc > d[u]:
-            continue
-
-        # Relaxation: Cập nhật khoảng cách từ s tới các đỉnh kề với u
-        for v, w in adj[u]:
-            if d[v] > d[u] + w:
-                d[v] = d[u] + w
-                heapq.heappush(Q, (d[v], v))
-
-    return d
+    if queue:
+        node, path = queue.popleft()
+        if node == goal:
+            print("Đường đi từ S đến G:", path)
+            return
+        if node not in visited:
+            visited.add(node)
+            for neighbor in G[node]:
+                queue.append((neighbor, path + [neighbor]))
+        nx.draw_networkx_nodes(G, pos, nodelist=path, node_color='red', node_size=2000)
 
 
-# Ví dụ sử dụng
-n = 4  # Số đỉnh
-adj = {
-    1: [(2, 1), (4, 4)],
-    2: [(1, 1), (3, 2), (4, 3)],
-    3: [(2, 2)],
-    4: [(1, 4), (2, 3)]
-}
-
-s = 1  # Đỉnh nguồn
-distances = dijkstra(s, n, adj)
-print("Khoảng cách từ đỉnh", s, "đến các đỉnh khác:", distances[1:])
+# Tạo animation
+fig, ax = plt.subplots()
+ani = FuncAnimation(fig, update, frames=range(10), repeat=False)
+plt.show()
