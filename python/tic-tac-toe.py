@@ -17,15 +17,15 @@ SPACE = CELL_SIZE // 4
 # Colors
 BG_COLOR = (255, 255, 255)
 LINE_COLOR = (0, 0, 0)
-CIRCLE_COLOR = (255, 0, 0)
-CROSS_COLOR = (0, 255, 0)
+CIRCLE = (255, 0, 0)
+CROSS = (0, 255, 0)
 
 # Screen
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Tic Tac Toe")
 screen.fill(BG_COLOR)
 
-# Board
+# Board Initialization
 board = [" " for _ in range(9)]
 
 # Initialize the game
@@ -169,20 +169,20 @@ class TicTacToe:
     def draw_board(self):
         """Draw the board and the moves"""
         screen.fill(BG_COLOR)
-        # Draw vertical lines
+
         pygame.draw.line(screen, LINE_COLOR, (CELL_SIZE, 0), (CELL_SIZE, HEIGHT), LINE_WIDTH)
         pygame.draw.line(screen, LINE_COLOR, (2 * CELL_SIZE, 0), (2 * CELL_SIZE, HEIGHT), LINE_WIDTH)
-        # Draw horizontal lines
+
         pygame.draw.line(screen, LINE_COLOR, (0, CELL_SIZE), (WIDTH, CELL_SIZE), LINE_WIDTH)
         pygame.draw.line(screen, LINE_COLOR, (0, 2 * CELL_SIZE), (WIDTH, 2 * CELL_SIZE), LINE_WIDTH)
 
         for i in range(ROWS):
             for j in range(COLS):
                 if self.board[i * 3 + j] == "O":
-                    pygame.draw.circle(screen, CIRCLE_COLOR, (j * CELL_SIZE + CELL_SIZE // 2, i * CELL_SIZE + CELL_SIZE // 2), CIRCLE_RADIUS, CIRCLE_WIDTH)
+                    pygame.draw.circle(screen, CIRCLE, (j * CELL_SIZE + CELL_SIZE // 2, i * CELL_SIZE + CELL_SIZE // 2), CIRCLE_RADIUS, CIRCLE_WIDTH)
                 elif self.board[i * 3 + j] == "X":
-                    pygame.draw.line(screen, CROSS_COLOR, (j * CELL_SIZE + SPACE, i * CELL_SIZE + CELL_SIZE - SPACE), (j * CELL_SIZE + CELL_SIZE - SPACE, i * CELL_SIZE + SPACE), CROSS_WIDTH)
-                    pygame.draw.line(screen, CROSS_COLOR, (j * CELL_SIZE + SPACE, i * CELL_SIZE + SPACE), (j * CELL_SIZE + CELL_SIZE - SPACE, i * CELL_SIZE + CELL_SIZE - SPACE), CROSS_WIDTH)
+                    pygame.draw.line(screen, CROSS, (j * CELL_SIZE + SPACE, i * CELL_SIZE + CELL_SIZE - SPACE), (j * CELL_SIZE + CELL_SIZE - SPACE, i * CELL_SIZE + SPACE), CROSS_WIDTH)
+                    pygame.draw.line(screen, CROSS, (j * CELL_SIZE + SPACE, i * CELL_SIZE + SPACE), (j * CELL_SIZE + CELL_SIZE - SPACE, i * CELL_SIZE + CELL_SIZE - SPACE), CROSS_WIDTH)
 
     def display_winner(self):
         """Display the winner or a tie message"""
@@ -194,11 +194,9 @@ class TicTacToe:
             message = "It's a tie!"
 
         font = pygame.font.Font(None, 36)
-        text = font.render(message, True, (255, 255, 255))
+        text = font.render(message, True, (255, 0, 0))
         text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         screen.blit(text, text_rect)
 
-# Main
-if __name__ == "__main__":
-    game = TicTacToe()
-    game.play_game()
+game = TicTacToe()
+game.play_game()
