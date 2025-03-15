@@ -25,10 +25,8 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Tic Tac Toe")
 screen.fill(BG_COLOR)
 
-# Board Initialization
 board = [" " for _ in range(9)]
 
-# Initialize the game
 class TicTacToe:
     def __init__(self):
         self.board = [" " for _ in range(9)]
@@ -111,11 +109,8 @@ class TicTacToe:
         best_move = None
 
         for move in self.available_moves():
-            # Make a calculating move
             self.board[move] = self.ai_player
-            # Recursively call minimax with the next depth and the minimizing player
             score = self.minimax(0, False)
-            # Reset the move
             self.board[move] = " "
 
             # Update the best score
@@ -193,7 +188,7 @@ class TicTacToe:
         else:
             message = "It's a tie!"
 
-        font = pygame.font.Font(None, 36)
+        font = pygame.font.Font(None, 18)
         text = font.render(message, True, (255, 0, 0))
         text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         screen.blit(text, text_rect)
