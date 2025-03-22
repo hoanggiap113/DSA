@@ -1,130 +1,211 @@
-# def recursion(n,fr,to,between):
-#     if(n == 0):
-#         return
-#     recursion(n - 1,fr,between,to)
-#     print("Chuyển đĩa: " + str(n) + " từ cột " + fr + " sang cột " + to)
-#     recursion(n - 1,between,to,fr)
-
-# if __name__ == "__main__":
-#     n = int(input())
-#     recursion(n,"A","C","B")
-
 import pygame
+import random
 import sys
-import time
+import math
 
-# Cấu hình màu sắc
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-LIGHT_GRAY = (200, 200, 200)
-
-# Cấu hình trò chơi
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 400
-PEG_X_POSITIONS = [200, 400, 600]
-PEG_Y_POSITION = 300
-DISK_HEIGHT = 20
-DISK_COLORS = [RED, GREEN, BLUE]
-
-# Khởi tạo pygame
 pygame.init()
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Tower of Hanoi")
-clock = pygame.time.Clock()
-font = pygame.font.Font(None, 36)
 
-# Vẽ các cột
-def draw_pegs():
-    for x in PEG_X_POSITIONS:
-        pygame.draw.rect(screen, BLACK, (x - 5, 100, 10, 200))
+# Kích thước bảng và các thông số khác
+WIDTH, HEIGHT = 600, 600
+LINE_WIDTH = 5
+ROWS, COLS = 5, 5  # Thay đổi kích thước bảng thành 5x5
+CELL_SIZE = WIDTH // COLS
+CIRCLE_RADIUS = CELL_SIZE // 3
+CIRCLE_WIDTH = 5
+CROSS_WIDTH = 5
+SPACE = CELL_SIZE // 4
 
-# Vẽ các đĩa
-def draw_disks(pegs, selected_disk=None, mouse_pos=None):
-    for peg_index, peg in enumerate(pegs):
-        for disk_index, disk in enumerate(peg):
-            if selected_disk == (peg_index, disk_index):
-                continue
-            disk_width = disk * 30
-            color = DISK_COLORS[disk % len(DISK_COLORS)]
-            x = PEG_X_POSITIONS[peg_index] - disk_width // 2
-            y = PEG_Y_POSITION - (disk_index + 1) * DISK_HEIGHT
-            pygame.draw.rect(screen, color, (x, y, disk_width, DISK_HEIGHT))
-    if selected_disk and mouse_pos:
-        disk_width = selected_disk[1] * 30
-        color = DISK_COLORS[selected_disk[1] % len(DISK_COLORS)]
-        x = mouse_pos[0] - disk_width // 2
-        y = mouse_pos[1] - DISK_HEIGHT // 2
-        pygame.draw.rect(screen, color, (x, y, disk_width, DISK_HEIGHT))
+# Màu sắc
+BG_COLOR = (255, 255, 255)
+LINE_COLOR = (0, 0, 0)
+CIRCLE = (255, 0, 0)
+CROSS = (0, 255, 0)
 
-# Cập nhật màn hình
-def update_screen(pegs, selected_disk=None, mouse_pos=None):
-    screen.fill(WHITE)
-    draw_pegs()
-    draw_disks(pegs, selected_disk, mouse_pos)
-    draw_buttons()
-    pygame.display.flip()
+# Màn hình
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Tic Tac Toe")
+screen.fill(BG_COLOR)
 
-# Vẽ các nút điều khiển
-def draw_buttons():
-    solve_button = pygame.Rect(650, 50, 100, 50)
-    inc_button = pygame.Rect(650, 120, 50, 50)
-    dec_button = pygame.Rect(700, 120, 50, 50)
-    pygame.draw.rect(screen, LIGHT_GRAY, solve_button)
-    pygame.draw.rect(screen, LIGHT_GRAY, inc_button)
-    pygame.draw.rect(screen, LIGHT_GRAY, dec_button)
-    screen.blit(font.render("Solve", True, BLACK), (665, 60))
-    screen.blit(font.render("+", True, BLACK), (670, 130))
-    screen.blit(font.render("-", True, BLACK), (720, 130))
+class TicTacToe:
+    def __init__(self, rows, cols):
+        self.rows = rows
+        self.cols = cols
+        self.board = [" " for _ in range(rows * cols)]
+        self.human_player = "O"
+        self.ai_player = "X"
+        self.game_over = False
+        self.winner = None
+        self.max_depth = 3  # Giới hạn độ sâu của Minimax
 
-# Thuật toán đệ quy Tháp Hà Nội
-def recursion(n, fr, to, between, pegs):
-    if n == 0:
-        return
-    recursion(n - 1, fr, between, to, pegs)
-    pegs[to].append(pegs[fr].pop())
-    update_screen(pegs)
-    time.sleep(0.5)
-    recursion(n - 1, between, to, fr, pegs)
+    def print_board(self):
+        """In trạng thái hiện tại của bảng"""
+        for i in range(0, self.rows * self.cols, self.cols):
+            print(" | ".join(self.board[i:i + self.cols]))
+            if i < self.rows * (self.cols - 1):
+                print("-" * (self.cols * 4 - 1))
 
-# Hàm chính
-def main():
-    num_disks = 3
-    pegs = [list(range(num_disks, 0, -1)), [], []]
-    selected_disk = None
+    def available_moves(self):
+        """Trả về danh sách các nước đi có sẵn (chỉ số của các ô trống)"""
+        return [i for i, spot in enumerate(self.board) if spot == " "]
 
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
+    def make_move(self, position, player):
+        """Thực hiện một nước đi trên bảng"""
+        if self.board[position] == " ":
+            self.board[position] = player
+            return True
+        return False
+
+    def is_board_full(self):
+        """Kiểm tra xem bảng đã đầy chưa"""
+        return " " not in self.board
+
+    def check_winner(self):
+        """Kiểm tra xem có người chiến thắng không. Trả về ký hiệu người chiến thắng hoặc None"""
+        # Kiểm tra hàng
+        for i in range(0, self.rows * self.cols, self.cols):
+            if all(self.board[i + j] == self.board[i] != " " for j in range(self.cols)):
+                return self.board[i]
+
+        # Kiểm tra cột
+        for i in range(self.cols):
+            if all(self.board[i + j * self.cols] == self.board[i] != " " for j in range(self.rows)):
+                return self.board[i]
+
+        # Kiểm tra đường chéo chính
+        if all(self.board[i * (self.cols + 1)] == self.board[0] != " " for i in range(self.rows)):
+            return self.board[0]
+
+        # Kiểm tra đường chéo phụ
+        if all(self.board[(i + 1) * (self.cols - 1)] == self.board[self.cols - 1] != " " for i in range(self.rows)):
+            return self.board[self.cols - 1]
+
+        return None
+
+    def minimax(self, depth, is_maximizing, alpha, beta):
+        # Các trường hợp cơ bản
+        winner = self.check_winner()
+        if winner == self.ai_player:
+            return 1
+        if winner == self.human_player:
+            return -1
+        if self.is_board_full() or depth == self.max_depth:
+            return 0
+
+        if is_maximizing:
+            best_score = -math.inf
+            for move in self.available_moves():
+                self.board[move] = self.ai_player
+                score = self.minimax(depth + 1, False, alpha, beta)
+                self.board[move] = " "
+                best_score = max(score, best_score)
+                alpha = max(alpha, best_score)
+                if beta <= alpha:
+                    break
+            return best_score
+        else:
+            best_score = math.inf
+            for move in self.available_moves():
+                self.board[move] = self.human_player
+                score = self.minimax(depth + 1, True, alpha, beta)
+                self.board[move] = " "
+                best_score = min(score, best_score)
+                beta = min(beta, best_score)
+                if beta <= alpha:
+                    break
+            return best_score
+
+    def get_best_move(self):
+        """Tìm nước đi tốt nhất cho AI sử dụng Minimax với cắt tỉa Alpha-Beta"""
+        best_score = -math.inf
+        best_move = None
+
+        for move in self.available_moves():
+            self.board[move] = self.ai_player
+            score = self.minimax(0, False, -math.inf, math.inf)
+            self.board[move] = " "
+
+            # Cập nhật điểm tốt nhất
+            if score > best_score:
+                best_score = score
+                best_move = move
+
+        return best_move
+
+    def play_game(self):
+        """Vòng lặp chính của trò chơi"""
+        ai_turn = random.choice([True, False])
+
+        while not self.game_over:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN and not ai_turn and not self.game_over:
+                    mouseX = event.pos[0] // CELL_SIZE
+                    mouseY = event.pos[1] // CELL_SIZE
+                    move = mouseY * self.cols + mouseX
+
+                    if move in self.available_moves():
+                        self.make_move(move, self.human_player)
+                        if self.check_winner() == self.human_player:
+                            self.winner = self.human_player
+                            self.game_over = True
+                        elif self.is_board_full():
+                            self.game_over = True
+                        ai_turn = True
+
+            if ai_turn and not self.game_over:
+                move = self.get_best_move()
+                self.make_move(move, self.ai_player)
+                if self.check_winner() == self.ai_player:
+                    self.winner = self.ai_player
+                    self.game_over = True
+                elif self.is_board_full():
+                    self.game_over = True
+                ai_turn = False
+
+            self.draw_board()
+            pygame.display.update()
+
+            if self.game_over:
+                self.display_winner()
+                pygame.time.wait(3000)
                 sys.exit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                x, y = event.pos
-                if 650 <= x <= 750 and 50 <= y <= 100:  # Nút "Solve"
-                    recursion(num_disks, 0, 2, 1, pegs)
-                elif 650 <= x <= 700 and 120 <= y <= 170:  # Nút tăng đĩa
-                    num_disks = min(num_disks + 1, 10)
-                    pegs = [list(range(num_disks, 0, -1)), [], []]
-                elif 700 <= x <= 750 and 120 <= y <= 170:  # Nút giảm đĩa
-                    num_disks = max(num_disks - 1, 1)
-                    pegs = [list(range(num_disks, 0, -1)), [], []]
-                else:
-                    for i, peg_x in enumerate(PEG_X_POSITIONS):
-                        if abs(x - peg_x) < 50 and pegs[i]:
-                            selected_disk = (i, pegs[i][-1])
-                            break
-            if event.type == pygame.MOUSEBUTTONUP and selected_disk:
-                x, y = event.pos
-                for i, peg_x in enumerate(PEG_X_POSITIONS):
-                    if abs(x - peg_x) < 50:
-                        if not pegs[i] or pegs[i][-1] > selected_disk[1]:
-                            pegs[i].append(pegs[selected_disk[0]].pop())
-                        break
-                selected_disk = None
-        update_screen(pegs, selected_disk, pygame.mouse.get_pos())
-        clock.tick(30)
 
-if __name__ == '__main__':
-    main()
+    def draw_board(self):
+        """Vẽ bảng và các nước đi"""
+        screen.fill(BG_COLOR)
+
+        # Vẽ các đường kẻ ngang và dọc
+        for i in range(1, self.cols):
+            pygame.draw.line(screen, LINE_COLOR, (i * CELL_SIZE, 0), (i * CELL_SIZE, HEIGHT), LINE_WIDTH)
+        for i in range(1, self.rows):
+            pygame.draw.line(screen, LINE_COLOR, (0, i * CELL_SIZE), (WIDTH, i * CELL_SIZE), LINE_WIDTH)
+
+        # Vẽ các nước đi
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self.board[i * self.cols + j] == "O":
+                    pygame.draw.circle(screen, CIRCLE, (j * CELL_SIZE + CELL_SIZE // 2, i * CELL_SIZE + CELL_SIZE // 2), CIRCLE_RADIUS, CIRCLE_WIDTH)
+                elif self.board[i * self.cols + j] == "X":
+                    pygame.draw.line(screen, CROSS, (j * CELL_SIZE + SPACE, i * CELL_SIZE + CELL_SIZE - SPACE), (j * CELL_SIZE + CELL_SIZE - SPACE, i * CELL_SIZE + SPACE), CROSS_WIDTH)
+                    pygame.draw.line(screen, CROSS, (j * CELL_SIZE + SPACE, i * CELL_SIZE + SPACE), (j * CELL_SIZE + CELL_SIZE - SPACE, i * CELL_SIZE + CELL_SIZE - SPACE), CROSS_WIDTH)
+
+    def display_winner(self):
+        """Hiển thị người chiến thắng hoặc thông báo hòa"""
+        if self.winner == self.ai_player:
+            message = "AI wins!"
+        elif self.winner == self.human_player:
+            message = "Congratulations! You win!"
+        else:
+            message = "It's a tie!"
+
+        font = pygame.font.Font(None, 36)
+
+        text = font.render(message, True, (0, 0, 0))
+        text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+        screen.blit(text, text_rect)
+        pygame.display.update()
+
+game = TicTacToe(ROWS, COLS)
+game.play_game()

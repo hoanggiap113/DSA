@@ -64,12 +64,10 @@ class TicTacToe:
             if self.board[i] == self.board[i + 1] == self.board[i + 2] != " ":
                 return self.board[i]
 
-        # Check columns
         for i in range(3):
             if self.board[i] == self.board[i + 3] == self.board[i + 6] != " ":
                 return self.board[i]
 
-        # Check diagonals
         if self.board[0] == self.board[4] == self.board[8] != " ":
             return self.board[0]
         if self.board[2] == self.board[4] == self.board[6] != " ":
@@ -188,10 +186,12 @@ class TicTacToe:
         else:
             message = "It's a tie!"
 
-        font = pygame.font.Font(None, 18)
-        text = font.render(message, True, (255, 0, 0))
+        font = pygame.font.Font(None, 36)
+
+        text = font.render(message, True, (0, 0, 0))
         text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
         screen.blit(text, text_rect)
+        pygame.display.update()
 
 game = TicTacToe()
 game.play_game()
