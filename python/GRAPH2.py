@@ -1,6 +1,9 @@
 import networkx as nx
 import matplotlib.pyplot as plt
-import time
+from matplotlib.animation import FuncAnimation
+import matplotlib
+
+matplotlib.use('TkAgg')
 
 
 def a_star_visualized(start, goal, graph, h_values, pos):
@@ -10,23 +13,33 @@ def a_star_visualized(start, goal, graph, h_values, pos):
         print("No path found!")
         return None
 
-    plt.figure(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(8, 6))
     visited = set()
 
-    for i in range(len(path)):
-        visited.add(path[i])
-        draw_graph(graph, pos, path[:i + 1], visited)
-        time.sleep(1)
+    def update(frame):
+        ax.clear()
+        visited.add(path[frame])
+        draw_graph(graph, pos, path[:frame + 1], visited, ax)
+
+    ani = FuncAnimation(fig, update, frames=len(path), repeat=False, interval=1000)
+    plt.show()
 
     return path
 
 
-def draw_graph(g, pos, path, visited):
-    plt.clf()
+def draw_graph(g, pos, path, visited, ax):
     node_colors = ['r' if n in path else ('gray' if n in visited else 'g') for n in g.nodes]
-    nx.draw(g, pos, with_labels=True, node_color=node_colors, edge_color='black', node_size=1000, font_size=10)
-    plt.title("A* Search Visualization - Step by Step")
-    plt.pause(1)
+
+    edge_labels = {(u, v): f"{g[u][v]['weight']}" for u, v in g.edges}
+
+    edge_colors = ['b' if (u, v) in zip(path, path[1:]) else 'black' for u, v in g.edges]
+
+    nx.draw(g, pos, with_labels=True, node_color=node_colors, edge_color=edge_colors, edge_cmap=plt.cm.Reds,
+            node_size=1000, font_size=10, ax=ax)
+    nx.draw_networkx_edge_labels(g, pos, edge_labels=edge_labels, font_size=10, ax=ax)
+
+    for node_key, (x, y) in pos.items():
+        ax.text(x, y + 0.25, f"h={h_values[node_key]}", fontsize=12, ha='center')
 
 
 G = nx.DiGraph()

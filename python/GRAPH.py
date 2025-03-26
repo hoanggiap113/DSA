@@ -5,7 +5,6 @@ import matplotlib
 
 matplotlib.use('TkAgg')
 
-
 def a_star_visualized(start, goal, graph, h_values, pos):
     try:
         path = nx.astar_path(graph, start, goal, heuristic=lambda n, _: h_values[n])
@@ -25,7 +24,6 @@ def a_star_visualized(start, goal, graph, h_values, pos):
     plt.show()
 
     return path
-
 
 def draw_graph(g, pos, path, visited, ax):
     node_colors = ['r' if n in path else ('gray' if n in visited else 'g') for n in g.nodes]
