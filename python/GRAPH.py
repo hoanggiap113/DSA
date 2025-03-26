@@ -1,78 +1,65 @@
-import heapq
 import networkx as nx
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from collections import deque
 import matplotlib
 
 matplotlib.use('TkAgg')
 
 
-def bfs(start, adj):
-    visited = {node: False for node in adj}
-    steps = []
-    q = deque([start])
-    visited[start] = True
-    while q:
-        node = q.popleft()
-        steps.append(node)
-        for neighbor in adj[node]:
-            if not visited[neighbor]:
-                visited[neighbor] = True
-                q.append(neighbor)
+def a_star_visualized(start, goal, graph, h_values, pos):
+    try:
+        path = nx.astar_path(graph, start, goal, heuristic=lambda n, _: h_values[n])
+    except nx.NetworkXNoPath:
+        print("No path found!")
+        return None
 
-    return steps
+    fig, ax = plt.subplots(figsize=(8, 6))
+    visited = set()
 
-
-def visualize(s, t, g, pos, h_values):
-    adj = {node: list(g.neighbors(node)) for node in g.nodes}
-    steps = bfs(s, adj)
-
-    fig, ax = plt.subplots()
-
-    visited_nodes = set()
-
-    def update(node):
+    def update(frame):
         ax.clear()
-        visited_nodes.add(node)
+        visited.add(path[frame])
+        draw_graph(graph, pos, path[:frame + 1], visited, ax)
 
-        node_colors = ['r' if n in visited_nodes else 'g' for n in g.nodes]
-        nx.draw(g, pos, with_labels=True, node_color=node_colors, ax=ax)
-
-        for node_key, (x, y) in pos.items():
-            ax.text(x, y + 0.25, f"h={h_values[node_key]}", fontsize=12, ha='center')
-
-        ax.set_title(f"Visiting Node: {node}",pad=20)
-
-    animation = FuncAnimation(fig, update, frames=steps, interval=1000, repeat=False)
+    ani = FuncAnimation(fig, update, frames=len(path), repeat=False, interval=1000)
     plt.show()
 
+    return path
 
-g = nx.DiGraph()
-g.add_weighted_edges_from([
-    ('S', 'A', 3), ('S', 'B', 1),
-    ('A', 'C', 1), ('A', 'D', 3), ('A', 'G', 4),
-    ('B', 'C', 4),
-    ('C', 'G', 3),
-    ('D', 'G', 2)
+
+def draw_graph(g, pos, path, visited, ax):
+    node_colors = ['r' if n in path else ('gray' if n in visited else 'g') for n in g.nodes]
+
+    edge_labels = {(u, v): f"{g[u][v]['weight']}" for u, v in g.edges}
+
+    edge_colors = ['b' if (u, v) in zip(path, path[1:]) else 'black' for u, v in g.edges]
+
+    nx.draw(g, pos, with_labels=True, node_color=node_colors, edge_color=edge_colors, edge_cmap=plt.cm.Reds,
+            node_size=1000, font_size=10, ax=ax)
+    nx.draw_networkx_edge_labels(g, pos, edge_labels=edge_labels, font_size=10, ax=ax)
+
+    for node_key, (x, y) in pos.items():
+        ax.text(x, y + 0.25, f"h={h_values[node_key]}", fontsize=12, ha='center')
+
+
+G = nx.DiGraph()
+G.add_weighted_edges_from([
+    ('S', 'A', 3), ('S', 'F', 2),
+    ('A', 'B', 1), ('A', 'E', 3),
+    ('B', 'D', 3), ('B', 'C', 1),
+    ('C', 'G', 2),
+    ('D', 'G', 2),
+    ('E', 'C', 2),
+    ('F', 'B', 3),
+    ('B', 'E', 1)
 ])
 
 pos = {
-    'S': (0, 2),
-    'B': (1, 3),
-    'A': (1, 1),
-    'C': (2, 3),
-    'D': (2, 1),
-    'G': (3, 2)
+    'S': (0, 2), 'A': (1, 1), 'F': (1, 3),
+    'B': (3, 3), 'E': (3, 1), 'D': (5, 3),
+    'C': (5, 1), 'G': (6, 2)
 }
 
-h_values = {
-    'S': 6,
-    'A': 3,
-    'B': 4,
-    'C': 2,
-    'D': 2,
-    'G': 0
-}
+h_values = {'S': 6, 'A': 4, 'F': 4, 'B': 4, 'E': 3, 'D': 1, 'C': 1, 'G': 0}
 
-visualize('S', 'G', g, pos, h_values)
+a_star_visualized('S', 'G', G, h_values, pos)

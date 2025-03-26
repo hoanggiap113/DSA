@@ -8,7 +8,7 @@ def sigmoid_derivative(x):
     return x * (1 - x)
 
 # Khởi tạo đầu vào
-x1, x2 = 0.5, 0.6  # Giá trị giả định
+x1, x2 = 2, 3  # Giá trị giả định
 X = np.array([[x1, x2]])
 
 y_actual = np.array([[1]])  # Nhãn mong muốn
@@ -18,7 +18,7 @@ W1 = np.array([[0.11, 0.12], [0.21, 0.08]])  # Từ input đến hidden layer
 W2 = np.array([[0.14], [0.15]])  # Từ hidden layer đến output
 
 # Quá trình huấn luyện
-alpha = 0.5  # Learning rate
+alpha = 0.05  # Learning rate
 epochs = 5
 
 for epoch in range(epochs):
