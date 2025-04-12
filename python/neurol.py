@@ -75,10 +75,9 @@ class NeuralNetwork:
         y_pred = self.predict(X)
         return -np.sum(y * np.log(y_pred) + (1 - y) * np.log(1 - y_pred))
 
-# Khởi tạo dữ liệu ví dụ
 np.random.seed(42)
-X_train = np.random.rand(5, 2)  # Chạy trên batch nhỏ để dễ theo dõi
-y_train = (X_train[:, 0] + X_train[:, 1] > 1).astype(int)  # Nhãn đơn giản
+X_train = np.random.rand(5, 2)
+y_train = (X_train[:, 0] + X_train[:, 1] > 1).astype(int)
 
 # Khởi tạo và train mạng neural
 nn = NeuralNetwork([2, 2, 1], alpha=0.5)
